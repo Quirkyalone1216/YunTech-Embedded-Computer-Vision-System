@@ -21,7 +21,7 @@ import com.chaquo.python.PyObject;
 import com.chaquo.python.android.AndroidPlatform;
 
 import java.io.ByteArrayOutputStream;
-
+import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -58,10 +58,22 @@ public class MainActivity extends AppCompatActivity {
 
                 // 调用Python方法处理图片
                 PyObject cvObject = python_cv.getModule("opencv_python");
-                Double tiltAngle = cvObject.callAttr("CalTiltAngle", byteArray).toJava(Double.class);
+                // 呼叫 Python 函數 CalTiltAngle 並取得返回的 tuple
+                PyObject result = cvObject.callAttr("CalTiltAngle", byteArray);
+
+                // 取得回傳的 tuple 中第一項：校正後正方形圖像 (bytes)
+                // 使用 asList() 轉換回傳的 tuple
+                List<PyObject> resultList = result.asList();
+                byte[] imageBytes = resultList.get(0).toJava(byte[].class);
+                Double tiltAngle = resultList.get(1).toJava(Double.class);
 
                 // 使用 Logger 輸出傾斜角度
                 Log.d("TiltAngle", "傾斜角度: " + tiltAngle + " 度");
+                byte[] bytes = cvObject.callAttr("opencv_process_image", byteArray).toJava(byte[].class);
+
+                // 將 bytes 轉換為 Bitmap，並顯示於 res_image 上
+                Bitmap resultBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+                res_image.setImageBitmap(resultBitmap);
             }
         });
     }

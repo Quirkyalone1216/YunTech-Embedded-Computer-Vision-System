@@ -15,30 +15,71 @@ def opencv_process_image(data):
     return byte_im
 
 def CalTiltAngle(data):
-    """
-    傾斜角度計算函數:
-        輸入: data -- 影像二進位資料 (bytes)
-        輸出: 傾斜角度 (度數)
-    """
-    # 將資料轉換成 numpy 陣列，然後用 cv2.imdecode 解碼成影像
+    # 1. 解碼影像
     image = cv2.imdecode(np.asarray(bytearray(data), dtype=np.uint8), cv2.IMREAD_COLOR)
     if image is None:
-        raise ValueError("無法解碼影像資料。")
-    # 轉換為灰階
+        print("無法解析影像")
+        return None
+    # 2. 灰階處理與二值化
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # 二值化影像 (閾值128，可視情況調整)
-    _, thresh = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY)
-    # 尋找外部輪廓
+    _, thresh = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
+    # 3. 輪廓偵測
     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
-        raise ValueError("影像中未找到任何輪廓。")
-    # 取得面積最大的輪廓
-    c = max(contours, key=cv2.contourArea)
-    # 取得最小外接矩形及其相關參數
-    rect = cv2.minAreaRect(c)
-    (cx, cy), (w, h), angle = rect
-    # OpenCV 返回的 angle 範圍通常為 [-90, 0)
-    # 若寬度小於高度，校正角度為 angle+90
-    if w < h:
-        angle += 90
-    return angle
+        print("找不到輪廓")
+        return None
+    largest_contour = max(contours, key=cv2.contourArea)
+    peri = cv2.arcLength(largest_contour, True)
+    approx = cv2.approxPolyDP(largest_contour, 0.02 * peri, True)
+    if len(approx) != 4:
+        print("無法偵測四邊形")
+        return None
+    # 4. 整理角點順序：左上、右上、右下、左下
+    pts = approx.reshape(4, 2)
+    rect = np.zeros((4, 2), dtype="float32")
+    s = pts.sum(axis=1)
+    rect[0] = pts[np.argmin(s)]      # 左上
+    rect[2] = pts[np.argmax(s)]        # 右下
+    diff = np.diff(pts, axis=1)
+    rect[1] = pts[np.argmin(diff)]     # 右上
+    rect[3] = pts[np.argmax(diff)]     # 左下
+    # 計算傾斜角度 (以左下與右下為基準)
+    # 計算底邊從左下到右下的向量
+    dx = rect[2][0] - rect[3][0]
+    dy = rect[2][1] - rect[3][1]
+    # 使用 arctan2 計算角度，再轉換成度數 (結果為角度值，水平為 0 度)
+    tiltAngle = np.degrees(np.arctan2(dy, dx))
+    # 5. 建立透視校正目標點
+    (tl, tr, br, bl) = rect
+    widthA = np.linalg.norm(br - bl)
+    widthB = np.linalg.norm(tr - tl)
+    maxWidth = max(int(widthA), int(widthB))
+    heightA = np.linalg.norm(tr - br)
+    heightB = np.linalg.norm(tl - bl)
+    maxHeight = max(int(heightA), int(heightB))
+
+    dst_rect = np.array([
+        [0, 0],
+        [maxWidth - 1, 0],
+        [maxWidth - 1, maxHeight - 1],
+        [0, maxHeight - 1]
+    ], dtype="float32")
+
+    # 6. 透視變換
+    M_horiz = cv2.getPerspectiveTransform(rect, dst_rect)
+    horizontal_image = cv2.warpPerspective(image, M_horiz, (maxWidth, maxHeight))
+
+    # 7. 貼回原始大小畫布中央（可選）
+    canvas = np.zeros_like(image)
+    h_warped, w_warped = horizontal_image.shape[:2]
+    start_y = (canvas.shape[0] - h_warped) // 2
+    start_x = (canvas.shape[1] - w_warped) // 2
+    canvas[start_y:start_y+h_warped, start_x:start_x+w_warped] = horizontal_image
+
+    # 8. 編碼成 JPEG byte 並回傳，同時回傳傾斜角度 (轉為 float)
+    success, img_bytes = cv2.imencode('.jpeg', canvas)
+    if not success:
+        print("JPEG 編碼失敗")
+        return None
+
+    return img_bytes.tobytes(), float(tiltAngle)
