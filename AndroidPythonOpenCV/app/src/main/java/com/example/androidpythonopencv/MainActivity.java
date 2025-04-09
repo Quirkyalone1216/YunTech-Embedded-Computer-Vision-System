@@ -53,16 +53,15 @@ public class MainActivity extends AppCompatActivity {
                 bitmap = drawable.getBitmap();
                 // 将Bitmap转换为byte[]对象
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                 byte[] byteArray = stream.toByteArray();
 
                 // 调用Python方法处理图片
                 PyObject cvObject = python_cv.getModule("opencv_python");
-                byte[] bytes = cvObject.callAttr("opencv_process_image", byteArray).toJava(byte[].class);
+                Double tiltAngle = cvObject.callAttr("CalTiltAngle", byteArray).toJava(Double.class);
 
-                // 将处理后的图片显示到画面上
-                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                res_image.setImageBitmap(bmp);
+                // 使用 Logger 輸出傾斜角度
+                Log.d("TiltAngle", "傾斜角度: " + tiltAngle + " 度");
             }
         });
     }

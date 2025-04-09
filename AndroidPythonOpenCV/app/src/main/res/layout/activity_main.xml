@@ -14,7 +14,7 @@
         android:layout_height="206dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="68dp"
-        android:src="@drawable/test"
+        android:src="@drawable/screenshot_20250409_100109_tronclass"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
