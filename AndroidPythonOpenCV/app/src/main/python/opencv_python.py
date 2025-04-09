@@ -83,3 +83,51 @@ def CalTiltAngle(data):
         return None
 
     return img_bytes.tobytes(), float(tiltAngle)
+
+
+def FoundCanCircle(data):
+    #=== 1. 解碼影像資料 ===#
+    image = cv2.imdecode(np.asarray(bytearray(data), dtype=np.uint8), cv2.IMREAD_COLOR)
+    if image is None:
+        return None  # 解碼失敗
+
+    output = image.copy()
+
+    #=== 2. 預處理（灰階 + 模糊）===#
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.medianBlur(gray, 5)
+
+    #=== 3. 偵測參數設定 ===#
+    target_x, target_y = 518, 437
+    tolerance = 50
+    min_r, max_r = 260, 320
+
+    #=== 4. 霍夫圓形偵測 ===#
+    circles = cv2.HoughCircles(
+        blurred,
+        cv2.HOUGH_GRADIENT,
+        dp=1.2,
+        minDist=500,
+        param1=100,
+        param2=30,
+        minRadius=min_r,
+        maxRadius=max_r
+    )
+
+    #=== 5. 篩選符合圓心條件的圓 ===#
+    detected = []
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        for (x, y, r) in circles:
+            if abs(x - target_x) <= tolerance and abs(y - target_y) <= tolerance:
+                # 畫圓與中心點（可選）
+                cv2.circle(output, (x, y), r, (0, 255, 0), 4)
+                cv2.rectangle(output, (x - 3, y - 3), (x + 3, y + 3), (255, 0, 0), -1)
+                detected.append((x, y, r))
+
+    #=== 6. 回傳影像 byte 資料（即使沒偵測到也回傳原圖） ===#
+    success, img_bytes = cv2.imencode('.jpeg', output)
+    if not success:
+        return None
+
+    return img_bytes.tobytes()
