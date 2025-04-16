@@ -53,13 +53,13 @@ public class MainActivity extends AppCompatActivity {
                 bitmap = drawable.getBitmap();
                 // 将Bitmap转换为byte[]对象
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
                 byte[] byteArray = stream.toByteArray();
 
                 // 调用Python方法处理图片
                 PyObject cvObject = python_cv.getModule("opencv_python");
                 // 呼叫 Python 函數 CalTiltAngle 並取得返回的 tuple
-                PyObject result = cvObject.callAttr("FoundCanCircle", byteArray);
+                PyObject result = cvObject.callAttr("MidtermTest_2", byteArray);
 
                 // 取得回傳的 tuple 中第一項：校正後正方形圖像 (bytes)
                 // 使用 asList() 轉換回傳的 tuple

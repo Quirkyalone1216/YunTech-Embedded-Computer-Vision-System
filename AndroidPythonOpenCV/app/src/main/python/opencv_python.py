@@ -131,3 +131,32 @@ def FoundCanCircle(data):
         return None
 
     return img_bytes.tobytes()
+
+def MidtermTest_2(data):
+    # 1. 解碼影像
+    img = cv2.imdecode(np.asarray(bytearray(data), dtype=np.uint8), cv2.IMREAD_COLOR)
+    if img is None:
+        print("無法解析影像")
+        return None
+    h, w = img.shape[:2]
+
+    # 分割為圖像1（左半）與圖像2（右半）
+    img1 = img[:, :w//2]
+    img2 = img[:, w//2:]
+
+    # 將圖像1逆時針旋轉90度
+    rotated_img1 = cv2.rotate(img1, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+    # 調整旋轉後的圖像1的高度與圖像2一致（對齊才能水平合併）
+    resized_rotated_img1 = cv2.resize(rotated_img1, (rotated_img1.shape[1], img2.shape[0]))
+
+    # 合併圖像：左邊為旋轉後的圖像1，右邊為圖像2
+    merged_fixed = np.hstack((resized_rotated_img1, img2))
+
+    # 8. 編碼成 JPEG byte 並回傳，同時回傳傾斜角度 (轉為 float)
+    success, img_bytes = cv2.imencode('.jpeg', merged_fixed)
+    if not success:
+        print("JPEG 編碼失敗")
+        return None
+
+    return img_bytes.tobytes()
