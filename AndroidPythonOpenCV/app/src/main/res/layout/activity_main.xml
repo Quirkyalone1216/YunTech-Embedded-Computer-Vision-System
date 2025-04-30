@@ -8,51 +8,39 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <ImageView
-        android:id="@+id/source_imageview"
-        android:layout_width="200dp"
-        android:layout_height="206dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="68dp"
-        android:src="@drawable/pic2"
+    <!-- 1. Camera 預覽 -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/processBtn"/>
 
+    <!-- 2. Python 回傳的結果圖 (初始隱藏疊加在 PreviewView 上) -->
     <ImageView
-        android:id="@+id/response_imageview"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_marginStart="31dp"
-        android:layout_marginTop="68dp"
-        android:layout_marginEnd="105dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.233"
-        app:layout_constraintStart_toEndOf="@+id/source_imageview"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:id="@+id/resultView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/previewView"
+        app:layout_constraintBottom_toBottomOf="@id/previewView"
+        app:layout_constraintStart_toStartOf="@id/previewView"
+        app:layout_constraintEnd_toEndOf="@id/previewView"
+        app:layout_constraintDimensionRatio="16:9"/>
 
+    <!-- 3. 觸發按鈕 -->
     <Button
-        android:id="@+id/Go_button"
-        android:layout_width="146dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="142dp"
-        android:layout_marginEnd="123dp"
-        android:layout_marginBottom="331dp"
-        android:text="Go"
+        android:id="@+id/processBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Process"
+        android:layout_marginBottom="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-
-<!--<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    android:orientation="vertical"-->
-<!--    android:background="#FFEEEEEE"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="match_parent">-->
-
-<!--    <TextView-->
-<!--        android:text="HELLO WORLD!"-->
-<!--        android:textSize="24sp"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"/>-->
-<!--</LinearLayout>-->
