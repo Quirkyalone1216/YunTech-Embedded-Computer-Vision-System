@@ -21,10 +21,11 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         python {
-            buildPython "C:\\Users\\chenk\\AppData\\Local\\Programs\\Python\\Python39\\python.exe"
+            buildPython "C:\\Users\\chenk\\AppData\\Local\\Programs\\Python\\Python38\\python.exe"
             pip {
-                install "opencv-python"
-                install "numpy"
+                install "scipy==1.4.1"
+                install "scikit-learn==0.22.1"
+                install "opencv-python==4.1.2.30"
             }
         }
 
